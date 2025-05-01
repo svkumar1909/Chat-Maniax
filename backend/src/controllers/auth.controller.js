@@ -4,31 +4,40 @@ import bcrypt from "bcryptjs";
 import cloudinary from "../config/cloudinary.js";
 
 export const signup = async (req, res) => {
-  const { fullName, email, password } = req.body;
+  const { fullName, email, password, confirmPassword } = req.body;
   try {
-    if (!fullName || !email || !password) {
+    // Check if all required fields are provided
+    if (!fullName || !email || !password || !confirmPassword) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
+    // Validate password length
     if (password.length < 6) {
       return res.status(400).json({ message: "Password must be at least 6 characters" });
     }
 
-    const user = await User.findOne({ email });
+    // Check if password and confirmPassword match
+    if (password !== confirmPassword) {
+      return res.status(400).json({ message: "Passwords do not match" });
+    }
 
+    // Check if email already exists
+    const user = await User.findOne({ email });
     if (user) return res.status(400).json({ message: "Email already exists" });
 
+    // Hash the password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    // Create a new user
     const newUser = new User({
       fullName,
       email,
       password: hashedPassword,
     });
 
+    // Save the new user and generate a JWT token
     if (newUser) {
-      // generate jwt token here
       generateToken(newUser._id, res);
       await newUser.save();
 
@@ -46,6 +55,7 @@ export const signup = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
 
 export const login = async (req, res) => {
   const { email, password } = req.body;

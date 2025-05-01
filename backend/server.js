@@ -11,6 +11,9 @@ import { app, server } from './src/config/socket.js';
 
 dotenv.config();
 
+// Connect to MongoDB
+connectDB();
+
 const PORT = process.env.PORT;
 const __dirname = path.resolve();
 
@@ -40,5 +43,4 @@ if (process.env.NODE_ENV === "production") {
 // Start server with socket listening
 server.listen(PORT, () => {
   console.log("Server is running on PORT:" + PORT);
-  connectDB();
 });
